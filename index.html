@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Quiz campo eléctrico I — Simulador integral</title>
+<style>
+  :root{
+    --bg:#f7f9fc; --panel:#ffffff; --ink:#162033; --muted:#667085; --line:#d7deea;
+    --blue:#2258b8; --blue2:#3b82f6; --green:#16a34a; --red:#dc2626; --orange:#f59e0b;
+    --violet:#7c3aed; --shadow:0 12px 35px rgba(16,24,40,.10); --soft:#eef4ff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+  header{height:70px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:14px;padding:10px 16px;position:sticky;top:0;z-index:30;box-shadow:0 2px 12px rgba(16,24,40,.05)}
+  header h1{font-size:20px;line-height:1;margin:0;color:#194b9b;letter-spacing:.2px}
+  header .subtitle{font-size:12px;color:var(--muted);margin-top:4px}.brand{margin-left:auto;text-align:right;font-size:12px;color:#202938;white-space:nowrap}.hamb{display:none;border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 10px;font-weight:800;color:var(--blue)}
+  .app{display:grid;grid-template-columns:300px minmax(0,1fr) 360px;gap:14px;padding:14px;height:calc(100vh - 70px)}
+  aside,.right,.stage{background:var(--panel);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);overflow:hidden}.stage{display:flex;flex-direction:column;min-width:0}
+  aside{overflow-y:auto}.right{overflow-y:auto;padding:14px}.sideHead{padding:14px;border-bottom:1px solid var(--line);background:linear-gradient(135deg,#fff,#edf4ff)}
+  .sideHead b{color:#194b9b}.menu{padding:10px}.menu button{width:100%;display:flex;align-items:center;gap:9px;padding:10px 11px;border:1px solid transparent;background:#fff;border-radius:12px;text-align:left;cursor:pointer;color:#263247;margin:4px 0;font-weight:650}.menu button:hover{background:#f0f6ff;border-color:#c9dcff}.menu button.active{background:#1f5fbf;color:#fff;border-color:#1f5fbf}.badge{min-width:26px;height:26px;border-radius:9px;background:#e8f1ff;color:#1f5fbf;display:inline-flex;align-items:center;justify-content:center;font-weight:800}.active .badge{background:#fff;color:#1f5fbf}.small{font-size:12px;color:var(--muted)}
+  .toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px;border-bottom:1px solid var(--line);background:#fff}.toolbar button,.btn{border:1px solid var(--line);border-radius:10px;background:#fff;padding:9px 11px;cursor:pointer;font-weight:750;color:#1d2939}.toolbar button.primary,.btn.primary{background:#1f5fbf;color:#fff;border-color:#1f5fbf}.toolbar button.green{background:#12813a;color:#fff;border-color:#12813a}.toolbar button.warn{background:#fff7e6;color:#92400e;border-color:#fed58a}.toolbar button:active,.btn:active{transform:translateY(1px)}
+  .workspace{display:grid;grid-template-columns:320px minmax(0,1fr);gap:12px;padding:12px;min-height:0;flex:1}.controls{border:1px solid var(--line);border-radius:16px;padding:12px;background:#fbfdff;overflow:auto}.visual{position:relative;border:1px solid var(--line);border-radius:16px;background:#fff;overflow:hidden;min-height:430px}.visual canvas{width:100%;height:100%;display:block}.floatingTitle{position:absolute;left:12px;top:12px;background:rgba(255,255,255,.92);backdrop-filter:blur(6px);border:1px solid var(--line);border-radius:12px;padding:8px 10px;font-weight:800;color:#194b9b;box-shadow:0 6px 18px rgba(16,24,40,.08)}
+  label{display:block;font-size:12px;color:#344054;font-weight:700;margin:9px 0 4px}.row{display:grid;grid-template-columns:1fr 1fr;gap:8px}.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}input,select,textarea{width:100%;border:1px solid #cfd8e7;border-radius:10px;padding:9px;background:#fff;color:#111827;font-size:14px}input[type=range]{padding:0}.switches{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}.pill{display:inline-flex;align-items:center;gap:6px;padding:7px 9px;border:1px solid var(--line);border-radius:999px;background:#fff;font-size:12px;font-weight:700}.card{border:1px solid var(--line);border-radius:16px;background:#fff;padding:12px;margin-bottom:12px}.card h3{margin:0 0 8px;color:#194b9b;font-size:17px}.card h4{margin:10px 0 6px;color:#263247}.metric{display:grid;grid-template-columns:1fr auto;gap:8px;border:1px solid #d7e2f6;background:#fbfdff;border-radius:12px;padding:9px;margin:7px 0}.metric b:last-child{color:#5b21b6}.eq{font-family:"SFMono-Regular",Consolas,Menlo,monospace;background:#f2f6ff;border:1px solid #d6e4ff;border-radius:12px;padding:9px;overflow:auto;font-size:12px;color:#1f3670}.explain{font-size:14px;line-height:1.45;color:#344054}.note{background:#fffbeb;border:1px solid #fde68a;color:#713f12;border-radius:12px;padding:10px;font-size:13px}.ok{background:#ecfdf3;border-color:#bbf7d0;color:#166534}.bad{background:#fef2f2;border-color:#fecaca;color:#991b1b}.quizItem{border:1px solid var(--line);border-radius:14px;padding:10px;margin:8px 0;background:#fff}.quizItem.active{border-color:#1f5fbf;background:#f4f8ff}.choices button{width:100%;text-align:left;margin:4px 0;border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px}.choices button:hover{background:#eef4ff}.miniCanvas{height:170px;border:1px solid var(--line);border-radius:14px;background:#fff;width:100%}.tutorBox{display:flex;gap:8px}.tutorBox input{flex:1}.footerline{font-size:11px;color:var(--muted);padding:8px 12px;border-top:1px solid var(--line);background:#fff}.progress{height:9px;border-radius:99px;background:#e5e7eb;overflow:hidden}.progress>span{display:block;height:100%;background:linear-gradient(90deg,#1f5fbf,#38bdf8);width:20%}.table{width:100%;border-collapse:collapse;font-size:12px}.table td,.table th{border:1px solid #d8e1ee;padding:6px;text-align:left}.table th{background:#f4f7fb;color:#194b9b}.hidden{display:none!important}.kbd{font-family:monospace;background:#edf2ff;padding:2px 6px;border-radius:6px}.formulaList li{margin:6px 0}.miniTabs{display:flex;flex-wrap:wrap;gap:6px}.miniTabs button{border:1px solid var(--line);border-radius:999px;background:#fff;padding:7px 9px;font-weight:700}.miniTabs button.on{background:#1f5fbf;color:#fff}.chargeList{max-height:155px;overflow:auto;border:1px dashed #cfd8e7;border-radius:12px;padding:7px;background:#fff}
+  @media (max-width:1180px){.app{grid-template-columns:260px minmax(0,1fr)}.right{grid-column:1 / -1;height:310px}.workspace{grid-template-columns:280px 1fr}.app{height:auto;min-height:calc(100vh - 70px)}}
+  @media (max-width:760px){header{height:auto;min-height:64px}.hamb{display:block}.brand{display:none}.app{display:block;padding:8px;height:auto}aside{position:fixed;z-index:60;top:64px;left:8px;right:8px;max-height:75vh;transform:translateY(-120%);transition:.22s;box-shadow:0 18px 60px rgba(0,0,0,.25)}aside.open{transform:translateY(0)}.stage,.right{margin:8px 0;border-radius:16px}.workspace{display:flex;flex-direction:column;padding:8px}.controls{max-height:none}.visual{min-height:420px}.toolbar{position:sticky;top:64px;z-index:20}.row,.row3{grid-template-columns:1fr}header h1{font-size:16px}.subtitle{display:none}.right{height:auto}.menu button{padding:12px}.floatingTitle{font-size:12px}}
+  @media print{body{background:#fff}.app{display:block;height:auto}.toolbar,aside,.hamb,.tutorBox{display:none}.stage,.right{box-shadow:none;border:none}.workspace{display:block}.controls{page-break-inside:avoid}.visual{height:500px}.right{height:auto}.card{page-break-inside:avoid}}
+</style>
+</head>
+<body>
+<header>
+  <button class="hamb" id="hamb">☰</button>
+  <div><h1>Quiz campo eléctrico I — simulador integral</h1><div class="subtitle">Campo eléctrico, potencial, energía, dipolos, placas, barras, discos, anillos y cascarones metálicos</div></div>
+  <div class="brand"><b>Autor:</b> Prof. Wong · Om Sai Ram<br><span class="small">HTML único · GitHub Pages · PC y celular</span></div>
+</header>
+<div class="app">
+  <aside id="sidebar">
+    <div class="sideHead"><b>Ruta de aprendizaje</b><br><span class="small">Una sola pantalla. Elige un laboratorio, cambia parámetros y practica.</span><div class="progress" title="Progreso"><span id="progressBar"></span></div></div>
+    <div class="menu" id="menu"></div>
+  </aside>
+  <main class="stage">
+    <div class="toolbar">
+      <button class="primary" id="playBtn">▶ Animar</button>
+      <button id="resetBtn">↺ Reiniciar</button>
+      <button class="green" id="challengeBtn">⚡ Reto</button>
+      <button id="compareBtn">⇄ Comparar</button>
+      <button id="hintBtn">💡 Pista</button>
+      <button id="pdfBtn">📄 Exportar PDF</button>
+      <button id="fullBtn">⛶ Pantalla completa</button>
+      <span class="pill">Modo: <b id="modeLabel">Exploración</b></span>
+    </div>
+    <section class="workspace">
+      <div class="controls" id="controls"></div>
+      <div class="visual">
+        <div class="floatingTitle" id="canvasTitle">Simulación</div>
+        <canvas id="mainCanvas" width="1100" height="720"></canvas>
+      </div>
+    </section>
+    <div class="footerline">Tip: arrastra el punto P en la gráfica cuando el laboratorio lo permita. Los resultados se actualizan en tiempo real.</div>
+  </main>
+  <section class="right">
+    <div class="card"><h3>Resultados exactos / cálculo</h3><div id="results"></div></div>
+    <div class="card"><h3>Explicación adaptativa</h3><div class="explain" id="explanation"></div></div>
+    <div class="card"><h3>Mini gráfica en vivo</h3><canvas id="miniCanvas" class="miniCanvas" width="440" height="180"></canvas></div>
+    <div class="card"><h3>Tutor IA local</h3><div class="tutorBox"><input id="aiQuestion" placeholder="Ej.: ¿qué pasa si el radio se duplica?"/><button class="btn primary" id="askBtn">Preguntar</button></div><div id="aiAnswer" class="explain" style="margin-top:9px"></div></div>
+  </section>
+</div>
+<script>
+'use strict';
+const K = 8.9875517923e9, EPS0 = 8.8541878128e-12, QE=1.602176634e-19, MP=1.67262192369e-27, ME=9.1093837015e-31;
+const cm=0.01, uC=1e-6;
+const $ = id => document.getElementById(id);
+const canvas = $('mainCanvas'), ctx = canvas.getContext('2d');
+const mini = $('miniCanvas'), mctx = mini.getContext('2d');
+let running=false, t=0, active='inicio', challenge=null, compared=false, dragging=false;
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const sci=(v,u='')=>{ if(!isFinite(v)) return '∞ '+u; const av=Math.abs(v); if(av===0) return '0 '+u; if(av>=1e4 || av<1e-2) return v.toExponential(4)+' '+u; return v.toPrecision(5)+' '+u; };
+const fmt=(v,u='')=>`${sci(v,u)}`;
+function metric(name,val){return `<div class="metric"><span>${name}</span><b>${val}</b></div>`}
+function eq(s){return `<div class="eq">${s}</div>`}
+function note(s,cls=''){return `<div class="note ${cls}">${s}</div>`}
+function get(id){ const el=$(id); if(!el) return 0; return el.type==='checkbox'?el.checked: (isNaN(Number(el.value))?el.value:Number(el.value)); }
+function setVal(id,v){ const el=$(id); if(el) el.value=v; }
+function signedCharge(q){return q>=0?`+${q}`:`${q}`}
+
+const modules = [
+  {id:'inicio', icon:'🏠', title:'Inicio: teoría y mapa', desc:'Resumen y ruta guiada'},
+  {id:'quiz', icon:'🧠', title:'Banco de 14 preguntas', desc:'Practicar preguntas conceptuales'},
+  {id:'charges', icon:'⚛️', title:'Cargas puntuales y punto P', desc:'Campo, potencial, fuerza y energía'},
+  {id:'proton', icon:'➜', title:'Protón en líneas de campo', desc:'Cantidad de movimiento y dirección'},
+  {id:'squares', icon:'▦', title:'Cuadrados con cargas', desc:'Campo neto en el centro P'},
+  {id:'lineCharges', icon:'⋯', title:'Cargas en línea', desc:'Ranking de campo central'},
+  {id:'twoQ', icon:'↕', title:'Dos cargas simétricas', desc:'Cancelación de componentes'},
+  {id:'dipole', icon:'🧲', title:'Dipolo eléctrico', desc:'U, torque y trabajo'},
+  {id:'rings', icon:'◎', title:'Anillos cargados', desc:'Campo axial de uno o dos anillos'},
+  {id:'annulus', icon:'◉', title:'Disco hueco / disco / aro', desc:'Campo en cualquier punto'},
+  {id:'rod', icon:'▭', title:'Barra cargada finita', desc:'Campo en cualquier punto'},
+  {id:'plates', icon:'▌▐', title:'Placas paralelas', desc:'Campo uniforme y trayectoria'},
+  {id:'shells', icon:'◎', title:'Esferas concéntricas metálicas', desc:'Gauss, E(r) y V(r)'},
+  {id:'arcs', icon:'◜', title:'Arcos y varillas', desc:'Preguntas de rods/círculos'},
+  {id:'whatif', icon:'🔬', title:'Laboratorio “¿qué pasaría si…?”', desc:'Experimentos guiados'},
+  {id:'errores', icon:'⚠️', title:'Errores comunes', desc:'Detectar ideas equivocadas'}
+];
+
+const defaults = {
+  charges:{preset:'custom', px:0, py:0, q0:1, showEq:true, showVectors:true, charges:[{x:-6,y:4,q:1},{x:6,y:3,q:-2},{x:-2,y:-6,q:1}]},
+  proton:{arr:'a', E:250, dt:1, qsign:1},
+  squares:{preset:'fig22_23', scale:10, px:0, py:0},
+  lineCharges:{situation:'1', d:5, center:0},
+  twoQ:{d:5, py:4, q:-1},
+  dipole:{p:1, E:1000, theta:60, theta2:10},
+  rings:{R:5, sep:12, qA:1, qB:1, px:0},
+  annulus:{kind:'annulus', Rin:4, Rout:10, Q:1, px:0, pz:8, nR:34, nPhi:72},
+  rod:{L:20, Q:1, px:0, py:8, n:500},
+  plates:{d:6, V:300, particle:'proton', v0:4, angle:0, L:14},
+  shells:{R1:4, R2:9, q1:1, q2:-1, r:6},
+  arcs:{kind:'semicircle', R:8, L:20, Q:1, px:0, py:0},
+};
+let state = JSON.parse(JSON.stringify(defaults));
+
+function initMenu(){
+  $('menu').innerHTML = modules.map((m,i)=>`<button data-id="${m.id}" class="${m.id===active?'active':''}"><span class="badge">${i+1}</span><span><b>${m.icon} ${m.title}</b><br><small>${m.desc}</small></span></button>`).join('');
+  document.querySelectorAll('#menu button').forEach(b=>b.onclick=()=>{ active=b.dataset.id; compared=false; challenge=null; $('sidebar').classList.remove('open'); render(); });
+}
+$('hamb').onclick=()=> $('sidebar').classList.toggle('open');
+$('playBtn').onclick=()=>{running=!running; $('playBtn').textContent=running?'⏸ Pausar':'▶ Animar'; $('modeLabel').textContent=running?'Animación':'Exploración';};
+$('resetBtn').onclick=()=>{ state=JSON.parse(JSON.stringify(defaults)); challenge=null; compared=false; render(); };
+$('pdfBtn').onclick=()=>window.print();
+$('fullBtn').onclick=()=> document.documentElement.requestFullscreen?.();
+$('hintBtn').onclick=()=>{ $('aiAnswer').innerHTML = hintFor(active); };
+$('compareBtn').onclick=()=>{ compared=!compared; render(); };
+$('challengeBtn').onclick=()=>makeChallenge();
+$('askBtn').onclick=()=>askAI();
+$('aiQuestion').addEventListener('keydown',e=>{if(e.key==='Enter') askAI();});
+
+function onInputUpdate(){
+  collectInputs();
+  draw();
+}
+function collectInputs(){
+  if(active==='charges'){
+    state.charges.preset=get('presetCharges'); state.charges.px=get('pcx'); state.charges.py=get('pcy'); state.charges.q0=get('q0'); state.charges.showEq=get('showEq'); state.charges.showVectors=get('showVectors');
+    if(state.charges.preset!=='custom') applyChargePreset(false);
+  } else if(active==='proton'){ state.proton.arr=get('protonArr'); state.proton.E=get('protonE'); state.proton.dt=get('protonDt'); state.proton.qsign=get('protonQ'); }
+  else if(active==='squares'){ state.squares.preset=get('squarePreset'); state.squares.scale=get('squareScale'); state.squares.px=get('squarePx'); state.squares.py=get('squarePy'); }
+  else if(active==='lineCharges'){ state.lineCharges.situation=get('lineSituation'); state.lineCharges.d=get('lined'); }
+  else if(active==='twoQ'){ state.twoQ.d=get('twoD'); state.twoQ.py=get('twoPy'); state.twoQ.q=get('twoQval'); }
+  else if(active==='dipole'){ state.dipole.p=get('dipoleP'); state.dipole.E=get('dipoleE'); state.dipole.theta=get('dipoleTheta'); state.dipole.theta2=get('dipoleTheta2'); }
+  else if(active==='rings'){ state.rings.R=get('ringR'); state.rings.sep=get('ringSep'); state.rings.qA=get('ringQA'); state.rings.qB=get('ringQB'); state.rings.px=get('ringPx'); }
+  else if(active==='annulus'){ state.annulus.kind=get('annKind'); state.annulus.Rin=get('annRin'); state.annulus.Rout=get('annRout'); state.annulus.Q=get('annQ'); state.annulus.px=get('annPx'); state.annulus.pz=get('annPz'); state.annulus.nR=get('annNR'); state.annulus.nPhi=get('annNPhi'); }
+  else if(active==='rod'){ state.rod.L=get('rodL'); state.rod.Q=get('rodQ'); state.rod.px=get('rodPx'); state.rod.py=get('rodPy'); state.rod.n=get('rodN'); }
+  else if(active==='plates'){ state.plates.d=get('plateD'); state.plates.V=get('plateV'); state.plates.particle=get('plateParticle'); state.plates.v0=get('plateV0'); state.plates.angle=get('plateAngle'); state.plates.L=get('plateL'); }
+  else if(active==='shells'){ state.shells.R1=get('shellR1'); state.shells.R2=get('shellR2'); state.shells.q1=get('shellQ1'); state.shells.q2=get('shellQ2'); state.shells.r=get('shellr'); }
+  else if(active==='arcs'){ state.arcs.kind=get('arcKind'); state.arcs.R=get('arcR'); state.arcs.L=get('arcL'); state.arcs.Q=get('arcQ'); state.arcs.px=get('arcPx'); state.arcs.py=get('arcPy'); }
+}
+
+function render(){
+  initMenu();
+  $('progressBar').style.width = `${Math.max(8,(modules.findIndex(m=>m.id===active)+1)/modules.length*100)}%`;
+  const title = modules.find(m=>m.id===active).title;
+  $('canvasTitle').textContent = title;
+  $('controls').innerHTML = controlsHTML(active);
+  document.querySelectorAll('#controls input,#controls select,#controls textarea').forEach(el=> el.addEventListener('input',onInputUpdate));
+  document.querySelectorAll('[data-preset]').forEach(el=>el.addEventListener('click',()=>{applyPresetButton(el.dataset.preset); render();}));
+  draw();
+}
+
+function controlsHTML(id){
+  if(id==='inicio') return `
+    <h3>Teoría mínima para resolver el test</h3>
+    <p class="small">El estudiante manipula el sistema y ve inmediatamente campo, potencial, energía, fuerza y ranking conceptual.</p>
+    ${eq('\\vec E(P)=k\\sum_i q_i\\,\\frac{\\vec r_P-\\vec r_i}{|\\vec r_P-\\vec r_i|^3},\\quad V(P)=k\\sum_i\\frac{q_i}{r_i},\\quad U=q_0V')}
+    <div class="miniTabs">
+      <button data-preset="goQuiz">Abrir banco de preguntas</button><button data-preset="goCharges">Cargas puntuales</button><button data-preset="goAnnulus">Disco hueco</button><button data-preset="goRod">Barra</button><button data-preset="goShells">Esferas</button>
+    </div>
+    <h4>Cómo usarlo en clase</h4><ol class="formulaList"><li>Elige una pregunta del menú.</li><li>Cambia valores y observa vectores, gráfica y resultados.</li><li>Usa “Reto” para practicar sin ver la respuesta primero.</li><li>Usa “Exportar PDF” para guardar la evidencia.</li></ol>
+    ${note('Esta versión usa un tutor IA local con reglas físicas. No necesita internet ni API para funcionar en GitHub Pages.')} `;
+  if(id==='quiz') return quizControls();
+  if(id==='charges') return `
+    <h3>Cargas puntuales</h3><label>Configuración</label><select id="presetCharges"><option value="custom" ${state.charges.preset==='custom'?'selected':''}>Personalizada</option><option value="triangle" ${state.charges.preset==='triangle'?'selected':''}>Triángulo</option><option value="line4" ${state.charges.preset==='line4'?'selected':''}>4 cargas en línea</option><option value="square8" ${state.charges.preset==='square8'?'selected':''}>Cuadrado del test</option><option value="cube8" ${state.charges.preset==='cube8'?'selected':''}>Cubo proyectado 8 cargas</option></select>
+    <div class="row"><button class="btn" data-preset="addCharge">+ carga</button><button class="btn" data-preset="clearCharges">limpiar</button></div>
+    <div class="row"><div><label>P x (cm)</label><input id="pcx" type="number" step="0.2" value="${state.charges.px}"></div><div><label>P y (cm)</label><input id="pcy" type="number" step="0.2" value="${state.charges.py}"></div></div>
+    <label>q₀ de prueba (µC)</label><input id="q0" type="number" step="0.1" value="${state.charges.q0}">
+    <div class="switches"><label class="pill"><input id="showVectors" type="checkbox" ${state.charges.showVectors?'checked':''}> vectores</label><label class="pill"><input id="showEq" type="checkbox" ${state.charges.showEq?'checked':''}> equipotenciales</label></div>
+    <div class="chargeList">${state.charges.charges.map((c,i)=>`<div class="row3"><input data-ci="${i}" data-prop="x" type="number" value="${c.x}" step="0.5"><input data-ci="${i}" data-prop="y" type="number" value="${c.y}" step="0.5"><input data-ci="${i}" data-prop="q" type="number" value="${c.q}" step="0.1"></div>`).join('')}</div>
+    <p class="small">Columnas de cada carga: x(cm), y(cm), q(µC). Arrastra P en el lienzo.</p>`;
+  if(id==='proton') return `
+    <h3>Protón en líneas de campo</h3><label>Arreglo tipo pregunta 1</label><select id="protonArr"><option value="a" ${state.proton.arr==='a'?'selected':''}>(a) líneas paralelas iguales</option><option value="b" ${state.proton.arr==='b'?'selected':''}>(b) campo no uniforme divergente</option><option value="c" ${state.proton.arr==='c'?'selected':''}>(c) campo más intenso abajo</option></select>
+    <div class="row"><div><label>|E| base (N/C)</label><input id="protonE" type="number" value="${state.proton.E}" step="10"></div><div><label>Δt (ns)</label><input id="protonDt" type="number" value="${state.proton.dt}" step="0.1"></div></div><label>Partícula</label><select id="protonQ"><option value="1" ${state.proton.qsign==1?'selected':''}>Protón (+e)</option><option value="-1" ${state.proton.qsign==-1?'selected':''}>Electrón (-e)</option></select>
+    ${note('La pregunta conceptual se resuelve con Δp = qEΔt. Si el campo es más grande en una zona, el cambio de momentum es mayor.')}`;
+  if(id==='squares') return `
+    <h3>Cuadrados con cargas</h3><label>Situación</label><select id="squarePreset"><option value="fig22_23" ${state.squares.preset==='fig22_23'?'selected':''}>Figura 22-23 completa</option><option value="square4" ${state.squares.preset==='square4'?'selected':''}>Cuadrado simple</option><option value="customLike" ${state.squares.preset==='customLike'?'selected':''}>Otro ejemplo balanceado</option></select>
+    <div class="row"><div><label>Lado externo (cm)</label><input id="squareScale" type="number" value="${state.squares.scale}" step="1"></div><div><label>P x (cm)</label><input id="squarePx" type="number" value="${state.squares.px}" step="0.2"></div></div><label>P y (cm)</label><input id="squarePy" type="number" value="${state.squares.py}" step="0.2">
+    ${note('Útil para ver por qué algunas cargas lejanas no “dominan” si sus signos y simetrías hacen cancelar componentes.')}`;
+  if(id==='lineCharges') return `
+    <h3>Cuatro cargas en línea</h3><label>Situación de la pregunta 4</label><select id="lineSituation"><option value="1" ${state.lineCharges.situation==='1'?'selected':''}>(1) +e, -e, -e, +e</option><option value="2" ${state.lineCharges.situation==='2'?'selected':''}>(2) +e, +e, -e, -e</option><option value="3" ${state.lineCharges.situation==='3'?'selected':''}>(3) -e, +e, +e, +e</option><option value="4" ${state.lineCharges.situation==='4'?'selected':''}>(4) +e, +e, +e, +e</option></select>
+    <label>Separación d (cm)</label><input id="lined" type="number" value="${state.lineCharges.d}" step="0.5">
+    ${eq('E_x(P)=k\\sum_i q_i\\frac{x_P-x_i}{|x_P-x_i|^3}')}`;
+  if(id==='twoQ') return `
+    <h3>Dos cargas simétricas -q</h3><div class="row"><div><label>d desde el eje (cm)</label><input id="twoD" type="number" value="${state.twoQ.d}" step="0.5"></div><div><label>Altura P y (cm)</label><input id="twoPy" type="number" value="${state.twoQ.py}" step="0.5"></div></div><label>Carga q de cada una (µC)</label><input id="twoQval" type="number" value="${state.twoQ.q}" step="0.1">
+    ${note('Las componentes horizontales se cancelan por simetría. Las verticales se suman o restan según el signo de la carga.')}`;
+  if(id==='dipole') return `
+    <h3>Dipolo eléctrico</h3><div class="row"><div><label>p (µC·cm)</label><input id="dipoleP" type="number" value="${state.dipole.p}" step="0.1"></div><div><label>E (N/C)</label><input id="dipoleE" type="number" value="${state.dipole.E}" step="50"></div></div><div class="row"><div><label>θ actual (grados)</label><input id="dipoleTheta" type="range" min="0" max="360" value="${state.dipole.theta}"><input type="number" id="dipoleThetaNum" class="hidden"></div><div><label>θ final para trabajo</label><input id="dipoleTheta2" type="number" value="${state.dipole.theta2}" step="5"></div></div>
+    ${eq('U=-pE\\cos\\theta,\\quad |\\tau|=pE\\sin\\theta,\\quad W_{campo}=U_i-U_f')}`;
+  if(id==='rings') return `
+    <h3>Anillos cargados</h3><div class="row"><div><label>Radio R (cm)</label><input id="ringR" type="number" value="${state.rings.R}" step="0.5"></div><div><label>Separación entre centros (cm)</label><input id="ringSep" type="number" value="${state.rings.sep}" step="0.5"></div></div><div class="row"><div><label>q anillo A (µC)</label><input id="ringQA" type="number" value="${state.rings.qA}" step="0.1"></div><div><label>q anillo B (µC)</label><input id="ringQB" type="number" value="${state.rings.qB}" step="0.1"></div></div><label>P x sobre el eje (cm)</label><input id="ringPx" type="range" min="-25" max="25" value="${state.rings.px}" step="0.2">
+    ${eq('E_x=kQ\\frac{x-x_c}{[(x-x_c)^2+R^2]^{3/2}}')}`;
+  if(id==='annulus') return `
+    <h3>Disco hueco, disco o aro</h3><label>Objeto</label><select id="annKind"><option value="annulus" ${state.annulus.kind==='annulus'?'selected':''}>Disco hueco / anillo plano</option><option value="disk" ${state.annulus.kind==='disk'?'selected':''}>Disco macizo</option><option value="ring" ${state.annulus.kind==='ring'?'selected':''}>Aro delgado</option></select>
+    <div class="row"><div><label>Radio interno (cm)</label><input id="annRin" type="number" value="${state.annulus.Rin}" step="0.5"></div><div><label>Radio externo (cm)</label><input id="annRout" type="number" value="${state.annulus.Rout}" step="0.5"></div></div>
+    <label>Carga total Q (µC)</label><input id="annQ" type="number" value="${state.annulus.Q}" step="0.1">
+    <div class="row"><div><label>P x (cm)</label><input id="annPx" type="number" value="${state.annulus.px}" step="0.5"></div><div><label>P z/eje (cm)</label><input id="annPz" type="number" value="${state.annulus.pz}" step="0.5"></div></div>
+    <div class="row"><div><label>Subdivisión radial</label><input id="annNR" type="number" value="${state.annulus.nR}" min="8" max="100" step="2"></div><div><label>Subdivisión angular</label><input id="annNPhi" type="number" value="${state.annulus.nPhi}" min="24" max="180" step="12"></div></div>
+    ${note('En el eje se usa fórmula cerrada. Fuera del eje se usa integración numérica de alta resolución para que el alumno explore cualquier punto.')}`;
+  if(id==='rod') return `
+    <h3>Barra cargada finita</h3><div class="row"><div><label>Longitud L (cm)</label><input id="rodL" type="number" value="${state.rod.L}" step="1"></div><div><label>Carga total Q (µC)</label><input id="rodQ" type="number" value="${state.rod.Q}" step="0.1"></div></div>
+    <div class="row"><div><label>P x (cm)</label><input id="rodPx" type="number" value="${state.rod.px}" step="0.5"></div><div><label>P y (cm)</label><input id="rodPy" type="number" value="${state.rod.py}" step="0.5"></div></div><label>Segmentos de integración</label><input id="rodN" type="number" value="${state.rod.n}" min="50" max="2000" step="50">
+    ${note('Si P está sobre la mediatriz de la barra, las componentes horizontales se cancelan. Si P se mueve, aparecen ambas componentes.')}`;
+  if(id==='plates') return `
+    <h3>Placas paralelas</h3><div class="row"><div><label>Separación d (cm)</label><input id="plateD" type="number" value="${state.plates.d}" step="0.5"></div><div><label>Diferencia de potencial ΔV (V)</label><input id="plateV" type="number" value="${state.plates.V}" step="10"></div></div><label>Partícula</label><select id="plateParticle"><option value="proton" ${state.plates.particle==='proton'?'selected':''}>Protón</option><option value="electron" ${state.plates.particle==='electron'?'selected':''}>Electrón</option><option value="neutron" ${state.plates.particle==='neutron'?'selected':''}>Neutrón</option><option value="custom" ${state.plates.particle==='custom'?'selected':''}>Carga +1 µC, masa 1 g</option></select>
+    <div class="row"><div><label>v₀ (km/s para protón/electrón)</label><input id="plateV0" type="number" value="${state.plates.v0}" step="0.5"></div><div><label>Ángulo inicial (°)</label><input id="plateAngle" type="number" value="${state.plates.angle}" step="5"></div></div><label>Largo de placas (cm)</label><input id="plateL" type="number" value="${state.plates.L}" step="1">
+    ${eq('E=\\Delta V/d,\\quad F=qE,\\quad a=qE/m')}`;
+  if(id==='shells') return `
+    <h3>Esferas concéntricas metálicas</h3><div class="row"><div><label>Radio esfera interna R₁ (cm)</label><input id="shellR1" type="number" value="${state.shells.R1}" step="0.5"></div><div><label>Radio esfera externa R₂ (cm)</label><input id="shellR2" type="number" value="${state.shells.R2}" step="0.5"></div></div><div class="row"><div><label>q₁ interna (µC)</label><input id="shellQ1" type="number" value="${state.shells.q1}" step="0.1"></div><div><label>q₂ externa (µC)</label><input id="shellQ2" type="number" value="${state.shells.q2}" step="0.1"></div></div><label>Distancia r del centro (cm)</label><input id="shellr" type="range" min="0.5" max="25" value="${state.shells.r}" step="0.2">
+    ${note('Para un cascarón conductor esférico: dentro del cascarón su propio campo es cero; fuera actúa como carga puntual en el centro.')}`;
+  if(id==='arcs') return `
+    <h3>Arcos, círculos y rods</h3><label>Geometría</label><select id="arcKind"><option value="quarter" ${state.arcs.kind==='quarter'?'selected':''}>Cuarto de círculo</option><option value="semicircle" ${state.arcs.kind==='semicircle'?'selected':''}>Semicírculo</option><option value="circle" ${state.arcs.kind==='circle'?'selected':''}>Círculo completo</option><option value="rodFull" ${state.arcs.kind==='rodFull'?'selected':''}>Barra L</option><option value="rodHalf" ${state.arcs.kind==='rodHalf'?'selected':''}>Barra L/2</option></select>
+    <div class="row"><div><label>Radio R o L/2 (cm)</label><input id="arcR" type="number" value="${state.arcs.R}" step="0.5"></div><div><label>Longitud L barra (cm)</label><input id="arcL" type="number" value="${state.arcs.L}" step="1"></div></div><label>Carga total Q (µC)</label><input id="arcQ" type="number" value="${state.arcs.Q}" step="0.1"><div class="row"><div><label>P x (cm)</label><input id="arcPx" type="number" value="${state.arcs.px}" step="0.5"></div><div><label>P y (cm)</label><input id="arcPy" type="number" value="${state.arcs.py}" step="0.5"></div></div>`;
+  if(id==='whatif') return `
+    <h3>Laboratorio “¿qué pasaría si…?”</h3><label>Experimento conceptual</label><select id="whatSel"><option>¿Qué pasa si el radio se duplica?</option><option>¿Qué pasa si la carga se vuelve negativa?</option><option>¿Qué pasa si se conecta a tierra?</option><option>¿Qué pasa si se inserta un dieléctrico?</option><option>¿Qué pasa si la masa aumenta?</option><option>¿Qué pasa si la resistencia se acerca a cero?</option><option>¿Qué pasa si P se acerca a una carga?</option><option>¿Qué pasa si el disco se vuelve hueco?</option></select><button class="btn primary" onclick="runWhatIf()">Ejecutar explicación</button><div id="whatOut" class="explain" style="margin-top:12px"></div><hr><p class="small">Este laboratorio genera explicaciones para discusión antes de calcular.</p>`;
+  if(id==='errores') return `
+    <h3>Errores comunes</h3><ul class="formulaList"><li>Confundir campo E con potencial V: E es vector, V es escalar.</li><li>Creer que una carga negativa “reduce” siempre el campo: en realidad cambia la dirección de su contribución.</li><li>Sumar magnitudes sin componentes vectoriales.</li><li>Olvidar convertir cm a m y µC a C.</li><li>En conductores: suponer campo dentro del metal distinto de cero en equilibrio electrostático.</li><li>En placas: confundir fuerza con aceleración; la aceleración depende de q/m.</li></ul><textarea id="misText" placeholder="Escribe aquí la explicación del estudiante para detectar posible error..." rows="5"></textarea><button class="btn primary" onclick="detectMisconception()">Detectar idea equivocada</button><div id="misOut" class="explain" style="margin-top:10px"></div>`;
+  return '';
+}
+function quizControls(){
+  return `<h3>Banco de preguntas conceptuales</h3><p class="small">Cada pregunta abre un laboratorio relacionado. Primero responde, luego comprueba con simulación.</p>${quizData.map((q,i)=>`<div class="quizItem" id="qitem${i}"><b>${i+1}. ${q.title}</b><p class="small">${q.text}</p><div class="choices">${q.choices.map((c,j)=>`<button onclick="answerQuiz(${i},${j})">${String.fromCharCode(65+j)}) ${c}</button>`).join('')}</div><button class="btn" onclick="openQuizLab(${i})">Abrir simulador relacionado</button><div id="qfb${i}" class="explain"></div></div>`).join('')}`;
+}
+
+const quizData = [
+ {title:'Protón entre líneas de campo', lab:'proton', text:'Ordena el cambio de momentum del protón en A→B.', choices:['a=b=c','b>a>c','c>a>b','a>c>b'], ans:1, why:'El cambio de momentum depende del campo promedio recorrido. Donde las líneas están más juntas, |E| es mayor.'},
+ {title:'Cuadrados de cargas', lab:'squares', text:'Calcula dirección y magnitud del campo neto en P.', choices:['Se anula siempre','Depende de signos y distancias','Solo depende de la carga más grande','Va siempre hacia +q'], ans:1, why:'Se suman vectores kq r/r³. El centro no garantiza cancelación si los signos no son simétricos.'},
+ {title:'Dos cargas −q simétricas', lab:'twoQ', text:'En el eje y, ¿qué componentes se cancelan?', choices:['x se cancela, y se suma','y se cancela, x se suma','ambas se cancelan','ninguna'], ans:0, why:'Por simetría, las componentes horizontales son iguales y opuestas; las verticales apuntan en la misma dirección.'},
+ {title:'Cuatro cargas en línea', lab:'lineCharges', text:'Ordena la magnitud del campo en el centro.', choices:['Usa el simulador para ranking','Todas iguales','La suma escalar basta','Solo importan las cargas externas'], ans:0, why:'Hay que sumar componentes con signo. La distancia al centro pesa como 1/r².'},
+ {title:'Dos cargas +q y −3q', lab:'charges', text:'¿Dónde puede anularse el campo?', choices:['Entre ellas','A la izquierda de +q','A la derecha de −3q','En el punto medio'], ans:1, why:'Entre cargas opuestas los campos van en la misma dirección. El cero aparece fuera, del lado de la carga de menor magnitud.'},
+ {title:'Dos anillos no conductores', lab:'rings', text:'Campo en puntos sobre el eje común.', choices:['Usar campo axial de anillo','Campo cero en todo punto','Solo depende del radio','No se puede calcular'], ans:0, why:'Cada anillo aporta Ex=kQx/(x²+R²)^(3/2). Se suman contribuciones de ambos anillos.'},
+ {title:'Dipolo en campo uniforme', lab:'dipole', text:'Ordena U y torque según orientación.', choices:['U=-pEcosθ y τ=pEsenθ','U=pEsenθ','τ=pEcosθ','No depende del ángulo'], ans:0, why:'La energía es mínima cuando p está paralelo a E; el torque es cero en paralelo o antiparalelo.'},
+ {title:'Trabajo del campo sobre dipolo', lab:'dipole', text:'Al rotar de θ1 a θ2, ¿cómo se decide el signo?', choices:['Wcampo=Ui-Uf','Siempre positivo','Siempre negativo','No hay trabajo'], ans:0, why:'El campo hace trabajo positivo si baja la energía potencial del dipolo.'},
+ {title:'Disco y anillo plano', lab:'annulus', text:'Comparar campo en un punto sobre el eje.', choices:['Usar disco externo menos disco interno','El hueco no afecta','Solo cuenta el borde','El campo siempre cero'], ans:0, why:'Un disco hueco se modela como disco de radio externo menos disco de radio interno con la misma densidad superficial.'},
+ {title:'Placas paralelas', lab:'plates', text:'Un electrón atraviesa entre placas sin desviarse. ¿Dirección del campo?', choices:['Depende de q y aceleración observada','Siempre izquierda','Siempre derecha','Campo cero necesariamente'], ans:0, why:'La fuerza es qE; para electrón la aceleración va opuesta al campo.'},
+ {title:'Varilla circular y curvatura', lab:'arcs', text:'Mayor curvatura y mayor cercanía suelen aumentar |E|.', choices:['Verdadero con suma vectorial','Falso siempre','Solo depende de Q','Solo del color'], ans:0, why:'La geometría cambia tanto distancia como cancelaciones vectoriales.'},
+ {title:'Tres dipolos cercanos', lab:'dipole', text:'La energía depende de orientaciones relativas.', choices:['Alineados favorables bajan U','Siempre igual','Solo depende de color','No hay interacción'], ans:0, why:'Dipolos se orientan para reducir energía; orientaciones contrarias o laterales pueden elevarla.'},
+ {title:'Rods y círculo completo', lab:'arcs', text:'Campo en P producido por rods y aro.', choices:['Usar integración de dq','Todos iguales','Círculo completo siempre máximo','Barra L/2 siempre cero'], ans:0, why:'Se integra dE=k dq r/r³. La simetría del círculo completo puede cancelar componentes en el centro.'},
+ {title:'Protones en campo uniforme', lab:'plates', text:'Magnitud de aceleración de protones en mismo campo.', choices:['Todas iguales','Depende de velocidad inicial','Depende de dirección de lanzamiento','Mayor para el más rápido'], ans:0, why:'a=qE/m. Si todos son protones en el mismo campo, la aceleración tiene igual magnitud; cambia la trayectoria por v inicial.'}
+];
+window.answerQuiz=function(i,j){ const q=quizData[i]; const ok=j===q.ans; $('qfb'+i).innerHTML=note((ok?'Correcto. ':'Revisa. ')+q.why, ok?'ok':'bad'); document.getElementById('qitem'+i).classList.add('active'); };
+window.openQuizLab=function(i){ active=quizData[i].lab; render(); };
+function applyPresetButton(p){ if(p==='goQuiz'){active='quiz'} if(p==='goCharges'){active='charges'} if(p==='goAnnulus'){active='annulus'} if(p==='goRod'){active='rod'} if(p==='goShells'){active='shells'} if(p==='addCharge'){state.charges.charges.push({x:Math.round((Math.random()*12-6)*10)/10,y:Math.round((Math.random()*12-6)*10)/10,q:1}); active='charges'} if(p==='clearCharges'){state.charges.charges=[]; active='charges'} }
+
+function applyChargePreset(update=true){
+  const p = state.charges.preset;
+  if(p==='triangle') state.charges.charges=[{x:-6,y:-4,q:1},{x:6,y:-4,q:1},{x:0,y:5,q:-1}];
+  if(p==='line4') state.charges.charges=[{x:-9,y:0,q:1},{x:-3,y:0,q:-1},{x:3,y:0,q:-1},{x:9,y:0,q:1}];
+  if(p==='square8') state.charges.charges=[{x:-6,y:6,q:6},{x:0,y:6,q:-2},{x:6,y:6,q:3},{x:-6,y:0,q:-3},{x:6,y:0,q:2},{x:-6,y:-6,q:2},{x:0,y:-6,q:1},{x:6,y:-6,q:-3}];
+  if(p==='cube8') state.charges.charges=[{x:-7,y:-7,q:1},{x:7,y:-7,q:1},{x:7,y:7,q:1},{x:-7,y:7,q:1},{x:-4,y:-4,q:1},{x:10,y:-4,q:1},{x:10,y:10,q:1},{x:-4,y:10,q:1}];
+  if(update) render();
+}
+
+function draw(){
+  ctx.clearRect(0,0,canvas.width,canvas.height); mctx.clearRect(0,0,mini.width,mini.height);
+  if(active==='inicio') drawIntro(); else if(active==='quiz') drawQuizIntro(); else if(active==='charges') drawCharges(); else if(active==='proton') drawProton(); else if(active==='squares') drawSquares(); else if(active==='lineCharges') drawLineCharges(); else if(active==='twoQ') drawTwoQ(); else if(active==='dipole') drawDipole(); else if(active==='rings') drawRings(); else if(active==='annulus') drawAnnulus(); else if(active==='rod') drawRod(); else if(active==='plates') drawPlates(); else if(active==='shells') drawShells(); else if(active==='arcs') drawArcs(); else if(active==='whatif') drawWhatIf(); else if(active==='errores') drawErrors();
+}
+function setupWorld(range=15){
+  const W=canvas.width,H=canvas.height; const s=Math.min(W,H)/(2*range); const ox=W/2, oy=H/2;
+  const toX=x=>ox+x*s, toY=y=>oy-y*s, toWorld=(px,py)=>({x:(px-ox)/s,y:(oy-py)/s});
+  ctx.save(); ctx.strokeStyle='#edf1f7'; ctx.lineWidth=1; for(let x=-range;x<=range;x++){ctx.beginPath();ctx.moveTo(toX(x),toY(-range));ctx.lineTo(toX(x),toY(range));ctx.stroke();} for(let y=-range;y<=range;y++){ctx.beginPath();ctx.moveTo(toX(-range),toY(y));ctx.lineTo(toX(range),toY(y));ctx.stroke();}
+  ctx.strokeStyle='#a8b5c7'; ctx.lineWidth=1.5; ctx.beginPath();ctx.moveTo(toX(-range),toY(0));ctx.lineTo(toX(range),toY(0));ctx.moveTo(toX(0),toY(-range));ctx.lineTo(toX(0),toY(range));ctx.stroke(); ctx.restore();
+  return {range,s,ox,oy,toX,toY,toWorld};
+}
+function arrow(x1,y1,x2,y2,color='#2563eb',w=2){
+  ctx.save();ctx.strokeStyle=color;ctx.fillStyle=color;ctx.lineWidth=w;ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();const a=Math.atan2(y2-y1,x2-x1),len=9;ctx.beginPath();ctx.moveTo(x2,y2);ctx.lineTo(x2-len*Math.cos(a-.45),y2-len*Math.sin(a-.45));ctx.lineTo(x2-len*Math.cos(a+.45),y2-len*Math.sin(a+.45));ctx.closePath();ctx.fill();ctx.restore();
+}
+function chargeCircle(x,y,q,label,world){
+  const X=world.toX(x),Y=world.toY(y); ctx.save();ctx.fillStyle=q>=0?'#dc2626':'#2563eb';ctx.beginPath();ctx.arc(X,Y,11,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=3;ctx.stroke();ctx.fillStyle='#111827';ctx.font='bold 14px system-ui';ctx.fillText(`${label||''}${q>=0?'+':''}${q}`,X+13,Y-12);ctx.restore();
+}
+function pointP(x,y,world){ const X=world.toX(x),Y=world.toY(y); ctx.save();ctx.fillStyle='#16a34a';ctx.beginPath();ctx.arc(X,Y,10,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=3;ctx.stroke();ctx.fillStyle='#064e3b';ctx.font='bold 16px system-ui';ctx.fillText('P',X+13,Y+5);ctx.restore(); }
+function fieldAtPoint(charges,xcm,ycm){
+  let Ex=0,Ey=0,V=0; const x=xcm*cm,y=ycm*cm;
+  for(const c of charges){ const dx=x-c.x*cm, dy=y-c.y*cm, r2=dx*dx+dy*dy, r=Math.sqrt(r2); if(r<1e-9) continue; const q=c.q*uC; Ex+=K*q*dx/(r2*r); Ey+=K*q*dy/(r2*r); V+=K*q/r; }
+  return {Ex,Ey,E:Math.hypot(Ex,Ey),V};
+}
+function drawVectorField(world,charges,range=14,step=3){
+  for(let x=-range;x<=range;x+=step) for(let y=-range;y<=range;y+=step){ const f=fieldAtPoint(charges,x,y); const mag=f.E; if(!isFinite(mag)||mag===0) continue; const len=clamp(Math.log10(mag+1)*4,5,22); const X=world.toX(x),Y=world.toY(y); arrow(X,Y,X+len*f.Ex/mag,Y-len*f.Ey/mag,'rgba(37,99,235,.62)',1.4); }
+}
+function drawEquipotentialApprox(world,charges){
+  ctx.save();ctx.strokeStyle='rgba(22,163,74,.45)';ctx.lineWidth=1.4; const levels=[-2e5,-1e5,-5e4,5e4,1e5,2e5,4e5];
+  // simple marching by sampling cells and drawing midpoint segments when sign changes
+  const n=42, R=world.range, dx=2*R/n; const grid=[];
+  for(let i=0;i<=n;i++){grid[i]=[]; for(let j=0;j<=n;j++){ const x=-R+i*dx,y=-R+j*dx; grid[i][j]=fieldAtPoint(charges,x,y).V; }}
+  for(const lev of levels){ ctx.beginPath(); for(let i=0;i<n;i++)for(let j=0;j<n;j++){ const pts=[[i,j],[i+1,j],[i+1,j+1],[i,j+1]]; const vals=pts.map(p=>grid[p[0]][p[1]]-lev); const cross=[]; for(let e=0;e<4;e++){ const a=pts[e],b=pts[(e+1)%4],va=vals[e],vb=vals[(e+1)%4]; if(va===0||va*vb<0){ const tt=Math.abs(va)/(Math.abs(va)+Math.abs(vb)); const x=(-R+a[0]*dx)*(1-tt)+(-R+b[0]*dx)*tt; const y=(-R+a[1]*dx)*(1-tt)+(-R+b[1]*dx)*tt; cross.push([world.toX(x),world.toY(y)]); }} if(cross.length===2){ctx.moveTo(cross[0][0],cross[0][1]);ctx.lineTo(cross[1][0],cross[1][1]);}}
+    ctx.stroke(); }
+  ctx.restore();
+}
+function updateChargeListFromDOM(){ document.querySelectorAll('[data-ci]').forEach(inp=>{ const i=+inp.dataset.ci, prop=inp.dataset.prop; if(state.charges.charges[i]) state.charges.charges[i][prop]=Number(inp.value); });}
+function drawCharges(){ updateChargeListFromDOM(); const s=state.charges; if(s.preset!=='custom'){} const world=setupWorld(15); if(s.showVectors) drawVectorField(world,s.charges); if(s.showEq) drawEquipotentialApprox(world,s.charges); s.charges.forEach((c,i)=>chargeCircle(c.x,c.y,c.q,'q'+(i+1)+'=',world)); pointP(s.px,s.py,world); const f=fieldAtPoint(s.charges,s.px,s.py); const X=world.toX(s.px),Y=world.toY(s.py); if(f.E>0) arrow(X,Y,X+55*f.Ex/f.E,Y-55*f.Ey/f.E,'#16a34a',4); const q0=s.q0*uC; const U=q0*f.V, F=q0*f.E; $('results').innerHTML=metric('Ex(P)',fmt(f.Ex,'N/C'))+metric('Ey(P)',fmt(f.Ey,'N/C'))+metric('|E(P)|',fmt(f.E,'N/C'))+metric('V(P)',fmt(f.V,'V'))+metric('U=q₀V',fmt(U,'J'))+metric('|F|=|q₀E|',fmt(Math.abs(F),'N'))+eq('Suma vectorial: E = k Σ qᵢ rᵢ/rᵢ³ · V = k Σ qᵢ/rᵢ'); $('explanation').innerHTML='Mueve P o edita las cargas. El campo se obtiene sumando vectores; el potencial se suma como escalar con signo. Cerca de una carga, el término 1/r² domina en E y 1/r domina en V.'+(compared?compareCharges():''); drawMiniRadial(x=>fieldAtPoint(s.charges,x,0).E,'|E(x,0)|'); }
+function drawMiniRadial(fn,label){ const W=mini.width,H=mini.height; mctx.clearRect(0,0,W,H); mctx.strokeStyle='#d7deea';mctx.strokeRect(30,10,W-40,H-35); const xs=[],ys=[]; for(let i=0;i<120;i++){ const x=-15+30*i/119; const y=Math.abs(fn(x)); if(isFinite(y)) {xs.push(x);ys.push(y);} } const max=Math.max(...ys,1); mctx.strokeStyle='#1f5fbf';mctx.lineWidth=2;mctx.beginPath(); ys.forEach((y,i)=>{const X=30+(W-40)*i/(ys.length-1),Y=H-25-(H-40)*Math.min(y/max,1); if(i)mctx.lineTo(X,Y);else mctx.moveTo(X,Y);});mctx.stroke();mctx.fillStyle='#344054';mctx.font='12px system-ui';mctx.fillText(label,36,25); }
+function compareCharges(){ const s=state.charges; const changed=s.charges.map(c=>({...c,q:2*c.q})); const f1=fieldAtPoint(s.charges,s.px,s.py), f2=fieldAtPoint(changed,s.px,s.py); return `<hr>${note('Comparación: si todas las cargas se duplican, E y V también se duplican. Aquí |E₂|/|E₁| = '+(f2.E/f1.E).toPrecision(3), 'ok')}`; }
+
+function drawIntro(){ setupWorld(15); ctx.save(); ctx.fillStyle='#194b9b'; ctx.font='bold 42px system-ui'; ctx.fillText('Campo eléctrico I',330,240); ctx.fillStyle='#344054'; ctx.font='22px system-ui'; ctx.fillText('Simulador + quiz + laboratorio virtual',330,280); ctx.fillStyle='#16a34a'; ctx.font='18px system-ui'; ctx.fillText('Selecciona un módulo en el menú lateral',330,325); ctx.restore(); $('results').innerHTML=metric('Módulos disponibles',modules.length)+metric('Cálculos', 'E, V, U, F, a, τ, W')+metric('Compatibilidad','HTML único'); $('explanation').innerHTML='Este ecosistema está diseñado para que el estudiante no memorice respuestas, sino que manipule parámetros y vea qué cambia y por qué. Incluye casos cerrados exactos y casos generales por integración numérica.'; drawMiniRadial(x=>1/(x*x+4),'Modelo 1/r²'); }
+function drawQuizIntro(){ setupWorld(15); ctx.save(); ctx.fillStyle='#1f5fbf'; ctx.font='bold 34px system-ui'; ctx.fillText('Banco de 14 preguntas',330,230); ctx.fillStyle='#344054'; ctx.font='18px system-ui'; ctx.fillText('Cada pregunta tiene retroalimentación y abre su laboratorio.',330,270); ctx.restore(); $('results').innerHTML=metric('Preguntas',quizData.length)+metric('Modo','Conceptual + simulación'); $('explanation').innerHTML='Contesta una opción. Si fallas, el programa explica la confusión típica y te lleva al simulador correcto para comprobarlo.'; drawMiniRadial(x=>Math.abs(Math.sin(x)),'Progreso conceptual'); }
+function drawProton(){ const s=state.proton; const world=setupWorld(12); ctx.save(); ctx.strokeStyle='#477ee8'; ctx.lineWidth=2; const lines=s.arr==='b'?[[-9,-4,9,0],[-9,0,9,2],[-9,4,9,5]]:s.arr==='c'?[[-9,-5,9,-5],[-9,-1,9,-1],[-9,5,9,5]]:[[-9,-5,9,-5],[-9,0,9,0],[-9,5,9,5]]; for(const l of lines){arrow(world.toX(l[0]),world.toY(l[1]),world.toX(l[2]),world.toY(l[3]),'#477ee8',2)} ctx.fillStyle='#dc2626';ctx.beginPath();ctx.arc(world.toX(-5),world.toY(0),9,0,6.28);ctx.fill(); ctx.fillText('A',world.toX(-5),world.toY(0)+25);ctx.fillText('B',world.toX(5),world.toY(0)+25);ctx.restore(); const localFactor=s.arr==='b'?1.35:s.arr==='c'?0.75:1; const E=s.E*localFactor, q=s.qsign*QE, dt=s.dt*1e-9; const dp=q*E*dt; $('results').innerHTML=metric('E promedio usado',fmt(E,'N/C'))+metric('Δp = qEΔt',fmt(dp,'kg·m/s'))+metric('|Δp|',fmt(Math.abs(dp),'kg·m/s'))+metric('Dirección',dp>=0?'a favor de E':'opuesta a E'); $('explanation').innerHTML='Para la pregunta de ranking, no necesitas masa: el impulso eléctrico es Δp=qEΔt. Si el tiempo y la distancia son comparables, gana el arreglo donde el campo promedio sobre la trayectoria sea mayor.'; drawMiniRadial(x=> s.E*(1+(s.arr==='b'?x/30:0)),'E local'); }
+function squareCharges(){ const L=state.squares.scale/2; return [{x:-L,y:L,q:6},{x:0,y:L,q:-2},{x:L,y:L,q:3},{x:-L,y:0,q:-3},{x:L,y:0,q:2},{x:-L,y:-L,q:2},{x:0,y:-L,q:1},{x:L,y:-L,q:-3}]; }
+function drawSquares(){ const s=state.squares; const world=setupWorld(12); const charges=s.preset==='fig22_23'?squareCharges():[{x:-5,y:5,q:1},{x:5,y:5,q:-1},{x:-5,y:-5,q:-1},{x:5,y:-5,q:1}]; drawVectorField(world,charges,12,3); charges.forEach((c,i)=>chargeCircle(c.x,c.y,c.q,'',world)); pointP(s.px,s.py,world); const f=fieldAtPoint(charges,s.px,s.py); $('results').innerHTML=metric('Ex',fmt(f.Ex,'N/C'))+metric('Ey',fmt(f.Ey,'N/C'))+metric('|E|',fmt(f.E,'N/C'))+metric('Ángulo',fmt(Math.atan2(f.Ey,f.Ex)*180/Math.PI,'°'))+eq('Usa cm→m y µC→C antes de aplicar Coulomb.'); $('explanation').innerHTML='En el centro, el resultado puede no ser cero aunque la figura parezca simétrica. La simetría geométrica solo cancela si también coinciden magnitudes y signos apropiados.'; drawMiniRadial(x=>fieldAtPoint(charges,x,0).E,'|E| sobre eje x'); }
+function drawLineCharges(){ const s=state.lineCharges; const d=s.d; const patterns={1:[1,-1,-1,1],2:[1,1,-1,-1],3:[-1,1,1,1],4:[1,1,1,1]}; const qs=patterns[s.situation]; const xs=[-1.5*d,-0.5*d,0.5*d,1.5*d]; const charges=qs.map((q,i)=>({x:xs[i],y:0,q})); const world=setupWorld(14); drawVectorField(world,charges,12,3); charges.forEach((c,i)=>chargeCircle(c.x,c.y,c.q,'',world)); pointP(0,0,world); const f=fieldAtPoint(charges,0,0); $('results').innerHTML=metric('Ex centro',fmt(f.Ex,'N/C'))+metric('|E| centro',fmt(f.E,'N/C'))+metric('Dirección',f.Ex>0?'hacia +x':f.Ex<0?'hacia −x':'cero')+eq('Las cargas más cercanas pesan 9 veces más que las externas si están a d/2 frente a 3d/2.'); $('explanation').innerHTML='No sumes cargas: suma campos. Dos configuraciones con carga total igual pueden tener campos centrales distintos.'; drawMiniRadial(x=>fieldAtPoint(charges,x,0).E,'|E(x)|'); }
+function drawTwoQ(){ const s=state.twoQ; const charges=[{x:-s.d,y:0,q:s.q},{x:s.d,y:0,q:s.q}]; const world=setupWorld(14); drawVectorField(world,charges,12,3); charges.forEach(c=>chargeCircle(c.x,c.y,c.q,'',world)); pointP(0,s.py,world); const f=fieldAtPoint(charges,0,s.py); $('results').innerHTML=metric('Ex',fmt(f.Ex,'N/C'))+metric('Ey',fmt(f.Ey,'N/C'))+metric('|E|',fmt(f.E,'N/C'))+metric('Cancelación','Ex = 0 por simetría')+eq('E_y=2kq\\frac{y}{(d^2+y^2)^{3/2}}'); $('explanation').innerHTML='La clave del ejercicio es vectorial: cada carga produce una componente x opuesta a la otra, pero ambas componentes y quedan en la misma línea. El signo de q decide si apunta hacia arriba o hacia abajo.'; drawMiniRadial(y=>Math.abs(fieldAtPoint(charges,0,y).Ey),'|Ey(0,y)|'); }
+function drawDipole(){ const s=state.dipole; const world=setupWorld(8); ctx.save(); arrow(world.toX(-7),world.toY(0),world.toX(7),world.toY(0),'#22c55e',3); ctx.fillStyle='#064e3b';ctx.font='bold 16px system-ui';ctx.fillText('E',world.toX(6.5),world.toY(0)-10); const th=s.theta*Math.PI/180; const len=4; const x1=-Math.cos(th)*len/2,y1=-Math.sin(th)*len/2,x2=Math.cos(th)*len/2,y2=Math.sin(th)*len/2; chargeCircle(x1,y1,-1,'',world); chargeCircle(x2,y2,1,'',world); arrow(world.toX(x1),world.toY(y1),world.toX(x2),world.toY(y2),'#7c3aed',3); ctx.restore(); const p=s.p*uC*cm, E=s.E, U=-p*E*Math.cos(th), tau=p*E*Math.sin(th); const th2=s.theta2*Math.PI/180, Uf=-p*E*Math.cos(th2), W=U-Uf; $('results').innerHTML=metric('U actual',fmt(U,'J'))+metric('|τ|',fmt(Math.abs(tau),'N·m'))+metric('W campo θ→θ₂',fmt(W,'J'))+metric('θ',fmt(s.theta,'°'))+eq('U=-pEcosθ; τ=pEsenθ; Wcampo=Ui-Uf'); $('explanation').innerHTML='El dipolo tiende a alinearse con el campo porque ahí la energía potencial es mínima. Si gira espontáneamente hacia menor U, el campo hace trabajo positivo.'; drawMiniAngle(x=>-p*E*Math.cos(x*Math.PI/180),'U(θ)'); }
+function drawMiniAngle(fn,label){ const W=mini.width,H=mini.height; mctx.clearRect(0,0,W,H); mctx.strokeStyle='#d7deea';mctx.strokeRect(30,10,W-40,H-35); const ys=[]; for(let i=0;i<=180;i++) ys.push(fn(i)); const min=Math.min(...ys),max=Math.max(...ys); mctx.strokeStyle='#7c3aed';mctx.lineWidth=2;mctx.beginPath(); ys.forEach((y,i)=>{const X=30+(W-40)*i/180,Y=H-25-(H-40)*(y-min)/(max-min||1); if(i)mctx.lineTo(X,Y);else mctx.moveTo(X,Y);});mctx.stroke();mctx.fillStyle='#344054';mctx.font='12px system-ui';mctx.fillText(label,36,25); }
+function ringFieldAt(xcm,Rcm,Quc,center=0){ const x=(xcm-center)*cm,R=Rcm*cm,Q=Quc*uC; return K*Q*x/Math.pow(x*x+R*R,1.5); }
+function drawRings(){ const s=state.rings; const world=setupWorld(18); const cA=-s.sep/2,cB=s.sep/2; ctx.save(); ctx.strokeStyle='#f97316';ctx.lineWidth=4; ctx.beginPath();ctx.ellipse(world.toX(cA),world.toY(0),18,70,0,0,6.28);ctx.stroke(); ctx.beginPath();ctx.ellipse(world.toX(cB),world.toY(0),18,70,0,0,6.28);ctx.stroke(); ctx.fillStyle='#111827';ctx.font='bold 14px system-ui';ctx.fillText('A',world.toX(cA)-5,world.toY(0)+85);ctx.fillText('B',world.toX(cB)-5,world.toY(0)+85); ctx.restore(); arrow(world.toX(-16),world.toY(0),world.toX(16),world.toY(0),'#94a3b8',1.5); pointP(s.px,0,world); const EA=ringFieldAt(s.px,s.R,s.qA,cA), EB=ringFieldAt(s.px,s.R,s.qB,cB), E=EA+EB; const V=K*s.qA*uC/Math.sqrt(((s.px-cA)*cm)**2+(s.R*cm)**2)+K*s.qB*uC/Math.sqrt(((s.px-cB)*cm)**2+(s.R*cm)**2); $('results').innerHTML=metric('E_Ax',fmt(EA,'N/C'))+metric('E_Bx',fmt(EB,'N/C'))+metric('E total',fmt(E,'N/C'))+metric('V total',fmt(V,'V'))+eq('E_x=kQ(x-x_c)/[(x-x_c)^2+R^2]^{3/2}'); $('explanation').innerHTML='Sobre el eje de un anillo, todas las componentes transversales se cancelan y solo queda la componente axial. Para dos anillos se suman sus campos con signo.'; drawMiniRadial(x=>Math.abs(ringFieldAt(x,s.R,s.qA,cA)+ringFieldAt(x,s.R,s.qB,cB)),'|E eje|'); }
+function annulusCalc(){ const s=state.annulus; let Rin=s.kind==='disk'?0:s.Rin, Rout=s.kind==='ring'?s.Rin:s.Rout; if(s.kind==='ring') Rout=Rin; if(Rout<Rin){const tmp=Rout;Rout=Rin;Rin=tmp;} const xP=s.px*cm,zP=s.pz*cm,Q=s.Q*uC; let Ex=0,Ez=0,V=0; let exact=null; if(s.kind==='ring'){ const R=Rin*cm; const r=Math.sqrt((xP*xP)+(zP*zP)+R*R); // numeric off axis below
+  }
+  if(Math.abs(s.px)<1e-9){
+    const z=zP, absz=Math.abs(z), sign=z>=0?1:-1;
+    if(s.kind==='ring'){ const R=Rin*cm; Ez=K*Q*z/Math.pow(z*z+R*R,1.5); V=K*Q/Math.sqrt(z*z+R*R); Ex=0; exact='fórmula axial cerrada para aro'; }
+    else { const area=Math.PI*((Rout*cm)**2-(Rin*cm)**2); const sigma=Q/area; const term=(R)=> z/Math.sqrt(z*z+(R*cm)**2); Ez=sigma/(2*EPS0)*(term(Rin)-term(Rout)); V=sigma/(2*EPS0)*(Math.sqrt(z*z+(Rout*cm)**2)-Math.sqrt(z*z+(Rin*cm)**2)); Ex=0; exact='fórmula axial cerrada para disco hueco'; }
+  } else {
+    const nR=clamp(Math.round(s.nR),8,120), nP=clamp(Math.round(s.nPhi),24,240); let area, sigma;
+    if(s.kind==='ring'){ const R=Rin*cm; const lam=Q/(2*Math.PI*R); const dphi=2*Math.PI/nP; for(let j=0;j<nP;j++){ const ph=(j+.5)*dphi; const xs=R*Math.cos(ph), ys=R*Math.sin(ph); const dq=lam*R*dphi; const dx=xP-xs, dy=0-ys, dz=zP; const r2=dx*dx+dy*dy+dz*dz, r=Math.sqrt(r2); Ex+=K*dq*dx/(r2*r); Ez+=K*dq*dz/(r2*r); V+=K*dq/r; } exact='integración numérica angular'; }
+    else { area=Math.PI*((Rout*cm)**2-(Rin*cm)**2); sigma=Q/area; const dr=((Rout-Rin)*cm)/nR, dphi=2*Math.PI/nP; for(let i=0;i<nR;i++){ const rmid=Rin*cm+(i+.5)*dr; for(let j=0;j<nP;j++){ const ph=(j+.5)*dphi; const xs=rmid*Math.cos(ph), ys=rmid*Math.sin(ph); const dA=rmid*dr*dphi; const dq=sigma*dA; const dx=xP-xs, dy=0-ys, dz=zP; const rr2=dx*dx+dy*dy+dz*dz, rr=Math.sqrt(rr2); Ex+=K*dq*dx/(rr2*rr); Ez+=K*dq*dz/(rr2*rr); V+=K*dq/rr; }} exact='integración numérica de superficie'; }
+  }
+  return {Ex,Ez,E:Math.hypot(Ex,Ez),V,Rin,Rout,exact};
+}
+function drawAnnulus(){ const s=state.annulus; const world=setupWorld(16); ctx.save(); ctx.translate(world.toX(0),world.toY(0)); const Rout=s.kind==='ring'?s.Rin:s.Rout, Rin=s.kind==='disk'?0:s.Rin; const scale=world.s; ctx.fillStyle='rgba(59,130,246,.10)';ctx.strokeStyle='#1f5fbf';ctx.lineWidth=3; ctx.beginPath();ctx.arc(0,0,Rout*scale,0,6.28); if(Rin>0){ctx.moveTo(Rin*scale,0);ctx.arc(0,0,Rin*scale,0,6.28,true);} ctx.fill('evenodd');ctx.stroke(); if(Rin>0){ctx.strokeStyle='#dc2626';ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,0,Rin*scale,0,6.28);ctx.stroke();} ctx.restore(); pointP(s.px,s.pz,world); const f=annulusCalc(); const X=world.toX(s.px),Y=world.toY(s.pz); if(f.E>0) arrow(X,Y,X+60*f.Ex/f.E,Y-60*f.Ez/f.E,'#16a34a',4); $('results').innerHTML=metric('Ex',fmt(f.Ex,'N/C'))+metric('Ez',fmt(f.Ez,'N/C'))+metric('|E|',fmt(f.E,'N/C'))+metric('V',fmt(f.V,'V'))+metric('Método',f.exact)+eq('Disco hueco axial: E_z=σ/(2ε₀)[z/√(z²+Rᵢ²)-z/√(z²+Rₒ²)]'); $('explanation').innerHTML='Un disco hueco se interpreta como disco externo menos disco interno. En el eje hay fórmula exacta; fuera del eje el programa divide la superficie en muchos dq y suma la contribución de cada elemento.'+(compared?compareAnnulus():''); drawMiniRadial(z=>{const old=state.annulus.px,oldz=state.annulus.pz;state.annulus.px=0;state.annulus.pz=z;const r=annulusCalc().E;state.annulus.px=old;state.annulus.pz=oldz;return r;},'|E| eje z'); }
+function compareAnnulus(){ const old=JSON.stringify(state.annulus); const base=annulusCalc().E; state.annulus.Rout*=2; const doubled=annulusCalc().E; state.annulus=JSON.parse(old); return `<hr>${note('Comparación: al duplicar el radio externo, el campo sobre el eje no siempre se duplica; cambia la distancia de cada dq y también la densidad si Q total queda fija. Relación nueva/base ≈ '+(doubled/base).toPrecision(3),'ok')}`; }
+function rodCalc(){ const s=state.rod; let Ex=0,Ey=0,V=0; const L=s.L*cm,Q=s.Q*uC,lambda=Q/L,n=clamp(Math.round(s.n),50,3000); const dx=L/n, xp=s.px*cm,yp=s.py*cm; for(let i=0;i<n;i++){ const x=-L/2+(i+.5)*dx, dq=lambda*dx; const rx=xp-x, ry=yp; const r2=rx*rx+ry*ry, r=Math.sqrt(r2); if(r<1e-12) continue; Ex+=K*dq*rx/(r2*r); Ey+=K*dq*ry/(r2*r); V+=K*dq/r; } return {Ex,Ey,E:Math.hypot(Ex,Ey),V}; }
+function drawRod(){ const s=state.rod; const world=setupWorld(18); ctx.save();ctx.strokeStyle='#1f5fbf';ctx.lineWidth=8;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(world.toX(-s.L/2),world.toY(0));ctx.lineTo(world.toX(s.L/2),world.toY(0));ctx.stroke();ctx.restore(); pointP(s.px,s.py,world); const f=rodCalc(); const X=world.toX(s.px),Y=world.toY(s.py); if(f.E>0) arrow(X,Y,X+60*f.Ex/f.E,Y-60*f.Ey/f.E,'#16a34a',4); $('results').innerHTML=metric('Ex',fmt(f.Ex,'N/C'))+metric('Ey',fmt(f.Ey,'N/C'))+metric('|E|',fmt(f.E,'N/C'))+metric('V',fmt(f.V,'V'))+metric('Método',`${s.n} segmentos dq`)+eq('dE=k dq r/r³, dq=λdx'); $('explanation').innerHTML='Para cualquier punto se integra toda la barra. En la mediatriz, Ex se cancela por simetría y solo queda Ey.'+(compared?compareRod():''); drawMiniRadial(y=>{const old=state.rod.py; state.rod.py=y; const r=rodCalc().E; state.rod.py=old; return r;},'|E(0,y)|'); }
+function compareRod(){ const base=rodCalc().E; const old=state.rod.Q; state.rod.Q=2*old; const doubled=rodCalc().E; state.rod.Q=old; return `<hr>${note('Si Q total se duplica con la misma geometría, λ se duplica y el campo también: razón ≈ '+(doubled/base).toPrecision(3),'ok')}`; }
+function plateParticle(){ const p=state.plates.particle; if(p==='proton') return {q:QE,m:MP,name:'protón'}; if(p==='electron') return {q:-QE,m:ME,name:'electrón'}; if(p==='neutron') return {q:0,m:1.6749275e-27,name:'neutrón'}; return {q:1e-6,m:1e-3,name:'carga de prueba'}; }
+function drawPlates(){ const s=state.plates; const world=setupWorld(13); const y=s.d/2; ctx.save();ctx.fillStyle='#64748b';ctx.fillRect(world.toX(-s.L/2),world.toY(y)-6,world.s*s.L,12);ctx.fillRect(world.toX(-s.L/2),world.toY(-y)-6,world.s*s.L,12);ctx.fillStyle='#dc2626';ctx.font='bold 16px system-ui';ctx.fillText('+',world.toX(-s.L/2)-22,world.toY(y)+5);ctx.fillStyle='#2563eb';ctx.fillText('−',world.toX(-s.L/2)-22,world.toY(-y)+5); for(let x=-s.L/2+1;x<s.L/2;x+=2) arrow(world.toX(x),world.toY(y-0.6),world.toX(x),world.toY(-y+0.6),'#22c55e',1.7); const part=plateParticle(), E=s.V/(s.d*cm), a=part.q*E/part.m; const v0=s.v0*1000, ang=s.angle*Math.PI/180; let vx=v0*Math.cos(ang), vy=v0*Math.sin(ang); ctx.strokeStyle='#f97316';ctx.lineWidth=3;ctx.beginPath(); for(let i=0;i<90;i++){ const tt=i/89*(s.L*cm/Math.max(Math.abs(vx),1)); const x=-s.L/2 + (vx*tt)/cm; const yy=(vy*tt + .5*a*tt*tt)/cm; const X=world.toX(x),Y=world.toY(yy); if(i)ctx.lineTo(X,Y); else ctx.moveTo(X,Y);} ctx.stroke(); ctx.restore(); $('results').innerHTML=metric('E=ΔV/d',fmt(E,'N/C'))+metric('F=qE',fmt(part.q*E,'N'))+metric('a=qE/m',fmt(a,'m/s²'))+metric('Partícula',part.name)+eq('x=v₀x t, y=v₀y t + ½at²'); $('explanation').innerHTML='Entre placas grandes el campo se aproxima uniforme. La aceleración no depende de la velocidad inicial, sino de qE/m. Un neutrón no se desvía por campo eléctrico ideal porque q=0.'; drawMiniRadial(x=>Math.abs(a),'a constante'); }
+function shellCalc(rCm){ const s=state.shells; const r=rCm*cm, R1=s.R1*cm,R2=s.R2*cm, q1=s.q1*uC,q2=s.q2*uC; let E=0; if(r<R1) E=0; else if(r<R2) E=K*q1/(r*r); else E=K*(q1+q2)/(r*r); const V=K*q1/Math.max(r,R1)+K*q2/Math.max(r,R2); return {E,V}; }
+function drawShells(){ const s=state.shells; const world=setupWorld(15); ctx.save();ctx.strokeStyle='#1f5fbf';ctx.lineWidth=4;ctx.beginPath();ctx.arc(world.toX(0),world.toY(0),s.R1*world.s,0,6.28);ctx.stroke();ctx.strokeStyle='#f97316';ctx.beginPath();ctx.arc(world.toX(0),world.toY(0),s.R2*world.s,0,6.28);ctx.stroke();ctx.restore(); pointP(s.r,0,world); const f=shellCalc(s.r); $('results').innerHTML=metric('E(r)',fmt(f.E,'N/C'))+metric('V(r)',fmt(f.V,'V'))+metric('Región',s.r<s.R1?'dentro esfera interna':s.r<s.R2?'entre cascarones':'exterior')+eq('V(r)=Σ kqᵢ/max(r,Rᵢ),  E(r)=kQ_enc/r² fuera de cada cascarón'); $('explanation').innerHTML='La ley de Gauss da campo cero dentro de un cascarón conductor esférico por su propia carga. Para el potencial, cada cascarón aporta un valor constante dentro de su radio.'+(compared?compareShells():''); drawMiniRadial(r=>shellCalc(Math.abs(r)).E,'E(r)'); }
+function compareShells(){ const base=shellCalc(state.shells.r).E; const old=state.shells.q2; state.shells.q2=0; const noOuter=shellCalc(state.shells.r).E; state.shells.q2=old; return `<hr>${note('Comparación: quitar la carga externa no cambia E entre R₁ y R₂, pero sí cambia V porque el potencial de la esfera externa entra como constante.', 'ok')}`; }
+function arcCalc(){ const s=state.arcs; let Ex=0,Ey=0,V=0; const N=800,Q=s.Q*uC,px=s.px*cm,py=s.py*cm; function add(x,y,dq){ const rx=px-x,ry=py-y,r2=rx*rx+ry*ry,r=Math.sqrt(r2); if(r<1e-12)return; Ex+=K*dq*rx/(r2*r); Ey+=K*dq*ry/(r2*r); V+=K*dq/r; }
+  if(s.kind==='rodFull'||s.kind==='rodHalf'){ const L=(s.kind==='rodHalf'?s.L/2:s.L)*cm; const dx=L/N; for(let i=0;i<N;i++){ const x=-L/2+(i+.5)*dx; add(x,0,Q/N); } }
+  else { const R=s.R*cm; const a0=s.kind==='quarter'?0:0, a1=s.kind==='quarter'?Math.PI/2:s.kind==='semicircle'?Math.PI:2*Math.PI; for(let i=0;i<N;i++){ const ph=a0+(i+.5)*(a1-a0)/N; add(R*Math.cos(ph),R*Math.sin(ph),Q/N); } }
+  return {Ex,Ey,E:Math.hypot(Ex,Ey),V}; }
+function drawArcs(){ const s=state.arcs; const world=setupWorld(15); ctx.save();ctx.strokeStyle='#1f5fbf';ctx.lineWidth=5;ctx.beginPath(); if(s.kind==='quarter')ctx.arc(world.toX(0),world.toY(0),s.R*world.s,0,-Math.PI/2,true); else if(s.kind==='semicircle')ctx.arc(world.toX(0),world.toY(0),s.R*world.s,Math.PI,0,false); else if(s.kind==='circle')ctx.arc(world.toX(0),world.toY(0),s.R*world.s,0,6.28); else {const L=s.kind==='rodHalf'?s.L/2:s.L;ctx.moveTo(world.toX(-L/2),world.toY(0));ctx.lineTo(world.toX(L/2),world.toY(0));} ctx.stroke();ctx.restore(); pointP(s.px,s.py,world); const f=arcCalc(); $('results').innerHTML=metric('Ex',fmt(f.Ex,'N/C'))+metric('Ey',fmt(f.Ey,'N/C'))+metric('|E|',fmt(f.E,'N/C'))+metric('V',fmt(f.V,'V'))+metric('Método','integración de 800 dq'); $('explanation').innerHTML='Este módulo permite comparar rods rectos, arco de 90°, semicírculo y círculo completo. Las simetrías pueden cancelar componentes aunque la carga total sea la misma.'; drawMiniRadial(x=>{const old=state.arcs.px;state.arcs.px=x;const r=arcCalc().E;state.arcs.px=old;return r;},'|E| vs x'); }
+function drawWhatIf(){ setupWorld(12); ctx.save();ctx.fillStyle='#194b9b';ctx.font='bold 30px system-ui';ctx.fillText('Laboratorio de escenarios',320,250);ctx.fillStyle='#344054';ctx.font='17px system-ui';ctx.fillText('Formula hipótesis, predice y luego comprueba en un módulo.',320,285);ctx.restore(); $('results').innerHTML=metric('Escenarios','8')+metric('Objetivo','razonamiento causal'); $('explanation').innerHTML='Usa este laboratorio para discutir antes de calcular. El buen estudiante primero predice la dirección del cambio, luego verifica con ecuaciones.'; drawMiniRadial(x=>Math.exp(-Math.abs(x)/5),'Cambio relativo'); }
+function drawErrors(){ setupWorld(12); ctx.save();ctx.fillStyle='#991b1b';ctx.font='bold 30px system-ui';ctx.fillText('Detector de errores comunes',300,250);ctx.fillStyle='#344054';ctx.font='17px system-ui';ctx.fillText('Escribe una explicación del estudiante y revisa la retroalimentación.',300,285);ctx.restore(); $('results').innerHTML=metric('Foco','conceptos')+metric('Uso','retroalimentación'); $('explanation').innerHTML='El objetivo no es castigar el error, sino hacerlo visible: escalar vs vector, signo, unidades, simetría, conductor y campo uniforme.'; drawMiniRadial(x=>1/(1+x*x),'Atención conceptual'); }
+
+canvas.addEventListener('mousedown',e=>{dragging=true; moveP(e)}); canvas.addEventListener('mousemove',e=>{if(dragging) moveP(e)}); window.addEventListener('mouseup',()=>dragging=false);
+canvas.addEventListener('touchstart',e=>{dragging=true; moveP(e.touches[0]); e.preventDefault();},{passive:false}); canvas.addEventListener('touchmove',e=>{if(dragging) moveP(e.touches[0]); e.preventDefault();},{passive:false}); window.addEventListener('touchend',()=>dragging=false);
+function moveP(e){ const rect=canvas.getBoundingClientRect(); const px=(e.clientX-rect.left)*canvas.width/rect.width, py=(e.clientY-rect.top)*canvas.height/rect.height; const world=setupWorld( active==='rings'?18: active==='rod'?18: active==='annulus'?16:15 ); const p=world.toWorld(px,py); if(active==='charges'){state.charges.px=+p.x.toFixed(2);state.charges.py=+p.y.toFixed(2);setVal('pcx',state.charges.px);setVal('pcy',state.charges.py)} else if(active==='annulus'){state.annulus.px=+p.x.toFixed(2);state.annulus.pz=+p.y.toFixed(2);setVal('annPx',state.annulus.px);setVal('annPz',state.annulus.pz)} else if(active==='rod'){state.rod.px=+p.x.toFixed(2);state.rod.py=+p.y.toFixed(2);setVal('rodPx',state.rod.px);setVal('rodPy',state.rod.py)} else if(active==='arcs'){state.arcs.px=+p.x.toFixed(2);state.arcs.py=+p.y.toFixed(2);setVal('arcPx',state.arcs.px);setVal('arcPy',state.arcs.py)} else return; draw(); }
+function animate(){ t+=0.016; if(running){ if(active==='dipole'){ state.dipole.theta=(state.dipole.theta+1)%360; setVal('dipoleTheta',state.dipole.theta); } if(active==='rings'){ state.rings.px=12*Math.sin(t); setVal('ringPx',state.rings.px); } if(active==='charges'){ state.charges.py=5*Math.sin(t*.8); setVal('pcy',state.charges.py.toFixed(2)); } draw(); } requestAnimationFrame(animate); }
+
+function hintFor(id){
+  const map={charges:'Pista: calcula primero cada vector Eᵢ. Dibuja dirección: carga positiva repele, negativa atrae a una carga de prueba positiva.',annulus:'Pista: en el eje del disco hueco usa disco externo menos disco interno. Fuera del eje suma dq.',rod:'Pista: divide la barra en dq. En la mediatriz, Ex se cancela.',plates:'Pista: entre placas E=ΔV/d. Luego F=qE y a=F/m.',shells:'Pista: aplica Gauss por regiones: r<R₁, R₁<r<R₂, r>R₂.',dipole:'Pista: energía mínima cuando p apunta en la misma dirección que E.',rings:'Pista: cada anillo solo aporta componente axial sobre el eje.',quiz:'Pista: no memorices el orden. Abre el simulador relacionado y mira qué vector se cancela.'};
+  return note(map[id]||'Pista: identifica primero si la magnitud es escalar o vectorial. Luego aplica simetría y unidades.', 'ok');
+}
+function askAI(){ const q=$('aiQuestion').value.toLowerCase(); let ans=''; if(!q.trim()) return; if(q.includes('radio')&&q.includes('dup')) ans='Si el radio se duplica, el efecto depende del sistema. Para una carga puntual E∝1/r², baja a 1/4. En un anillo o disco con Q fija, también cambia la distribución de dq, por eso conviene usar el módulo de anillos/disco y comparar.'; else if(q.includes('negativ')) ans='Si la carga se vuelve negativa, el campo que produce invierte su dirección y el potencial cambia de signo. La magnitud puede ser la misma si |q| no cambia.'; else if(q.includes('tierra')||q.includes('ground')) ans='Conectar a tierra permite intercambio de carga hasta fijar V=0. En conductores, las cargas se redistribuyen para que E dentro del metal sea cero.'; else if(q.includes('diel')) ans='Insertar un dieléctrico reduce el campo efectivo en un capacitor ideal por un factor κ si la carga libre se mantiene fija: E=E0/κ. Si la batería mantiene V, cambia la capacitancia y la carga almacenada.'; else if(q.includes('masa')) ans='Si aumenta la masa, la fuerza eléctrica qE no cambia, pero la aceleración baja: a=qE/m.'; else if(q.includes('resistencia')||q.includes('cero')) ans='Si la resistencia se acerca a cero en un circuito ideal, la corriente tendería a crecer mucho. En electrostática pura no uses R: aquí importan cargas, campos y potenciales.'; else if(q.includes('hueco')||q.includes('disco')) ans='Un disco hueco se calcula como disco grande menos disco pequeño. En el eje esa resta es exacta; fuera del eje se integra numéricamente.'; else if(q.includes('barra')) ans='Para una barra, toma dq=λdx y suma dE. En puntos fuera de la mediatriz aparecen componentes Ex y Ey.'; else ans='Buena pregunta. Primero identifica la ley dominante: Coulomb para cargas puntuales, Gauss para simetría esférica, E=ΔV/d para placas, U=-pEcosθ para dipolos. Luego predice signo, dirección y dependencia antes de calcular.'; $('aiAnswer').innerHTML=note(ans,'ok')+detectFromText(q); }
+function detectFromText(q){ if(q.includes('potencial')&&q.includes('vector')) return note('Corrección: el potencial V no es vector; es escalar. El campo E sí es vector.', 'bad'); if(q.includes('suma')&&q.includes('magnitudes')) return note('Cuidado: para el campo eléctrico debes sumar componentes, no solo magnitudes.', 'bad'); return ''; }
+window.runWhatIf=function(){ const val=$('whatSel')?.value||''; $('aiQuestion').value=val; askAI(); $('whatOut').innerHTML=$('aiAnswer').innerHTML; };
+window.detectMisconception=function(){ const txt=($('misText')?.value||'').toLowerCase(); let out=[]; if(txt.includes('campo')&&txt.includes('escalar')) out.push('Campo eléctrico no es escalar; es vector.'); if(txt.includes('potencial')&&txt.includes('vector')) out.push('Potencial eléctrico no es vector; es escalar.'); if(txt.includes('cm')&&!txt.includes('m')) out.push('Revisar conversión: cm debe pasar a m en Coulomb.'); if(txt.includes('micro')||txt.includes('uc')||txt.includes('µc')) out.push('Recordar: 1 µC = 10⁻⁶ C.'); if(txt.includes('conductor')&&txt.includes('campo dentro')&&!txt.includes('cero')) out.push('En equilibrio electrostático, dentro del material conductor E=0.'); if(!out.length) out.push('No veo un error típico claro. Pide al estudiante que especifique dirección, signo, unidades y ecuación usada.'); $('misOut').innerHTML=note(out.join('<br>'),out.length?'bad':'ok'); };
+function makeChallenge(){ challenge={module:active}; $('modeLabel').textContent='Reto'; let msg=''; if(active==='charges'){state.charges.px=+(Math.random()*10-5).toFixed(1);state.charges.py=+(Math.random()*10-5).toFixed(1);msg='Reto: estima |E(P)| antes de mirar resultados.';} else if(active==='annulus'){state.annulus.px=0;state.annulus.pz=+(3+Math.random()*10).toFixed(1);msg='Reto: predice si el campo aumenta o disminuye al alejar P del disco.';} else if(active==='shells'){state.shells.r=+(1+Math.random()*18).toFixed(1);msg='Reto: identifica la región de Gauss antes de ver E(r).';} else msg='Reto: cambia un parámetro y predice primero dirección y magnitud relativa.'; render(); $('aiAnswer').innerHTML=note(msg,'ok'); }
+
+initMenu(); render(); animate();
+</script>
+</body>
+</html>
